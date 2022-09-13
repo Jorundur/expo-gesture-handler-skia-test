@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import "expo-dev-client";
 
 import {
   Skia,
@@ -14,7 +15,7 @@ import {
   vec,
   useSharedValueEffect,
 } from "@shopify/react-native-skia";
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import {
   Gesture,
   GestureDetector,
@@ -24,10 +25,12 @@ import {
 import { useSharedValue } from "react-native-reanimated";
 
 export default function App() {
+  const panRef = useRef(null);
+
   return (
     <GestureHandlerRootView style={styles.container}>
-      <ScrollView>
-        <Slider height={400} width={400} />
+      <ScrollView simultaneousGestures={[panRef]}>
+        <Slider height={400} width={400} panRef={panRef} />
         <View style={styles.box} />
         <View style={styles.box} />
         <View style={styles.box} />
@@ -36,7 +39,7 @@ export default function App() {
   );
 }
 
-const Slider = ({ height, width }) => {
+const Slider = ({ height, width, panRef }) => {
   const path = useMemo(
     () => createGraphPath(width, height, 60, false),
     [height, width]
@@ -66,43 +69,24 @@ const Slider = ({ height, width }) => {
     );
   }, xPosShared);
 
-  const isDragging = useSharedValue(false);
-
-  const longPressGesture = Gesture.LongPress()
-    .onStart(() => {
-      isDragging.value = true;
-    })
-    .minDuration(250);
-
   const dragGesture = Gesture.Pan()
-    .manualActivation(true)
-    .onTouchesMove((e, state) => {
-      if (isDragging.value) {
-        state.activate();
-        xPosShared.value = e.changedTouches[0].x;
-      } else {
-        state.fail();
-      }
+    .onTouchesMove((e) => {
+      xPosShared.value = e.changedTouches[0].x;
     })
     .onStart(() => {
       console.log("onStart!");
     })
-    .onUpdate((event) => {
+    .onUpdate(() => {
       console.log("onUpdate!");
     })
     .onEnd(() => {
       console.log("onEnd!");
     })
-    .onFinalize(() => {
-      isDragging.value = false;
-    })
-    .simultaneousWithExternalGesture(longPressGesture);
-
-  const composedGesture = Gesture.Race(dragGesture, longPressGesture);
+    .withRef(panRef);
 
   return (
     <View style={{ height, marginBottom: 10 }}>
-      <GestureDetector gesture={composedGesture}>
+      <GestureDetector gesture={dragGesture}>
         <Canvas style={styles.graph}>
           <Fill color="black" />
           <Path
