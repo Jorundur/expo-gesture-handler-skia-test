@@ -18,20 +18,21 @@ import React, { useMemo } from "react";
 import {
   Gesture,
   GestureDetector,
+  GestureHandlerRootView,
   ScrollView,
 } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 
 export default function App() {
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={styles.container}>
       <ScrollView>
         <Slider height={400} width={400} />
         <View style={styles.box} />
         <View style={styles.box} />
         <View style={styles.box} />
       </ScrollView>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
